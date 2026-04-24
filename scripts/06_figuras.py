@@ -1,194 +1,122 @@
 # -*- coding: utf-8 -*-
 """
-SCRIPT 6: GERAÇÃO DE TODAS AS FIGURAS DO TCC
-==============================================
-- Figura 1: Matriz de correlação (já no script 2)
-- Figura 2: Diagnóstico dos resíduos (já no script 3)
-- Figura 3: Comparação de coeficientes (já no script 4)
-- Figura 4: Valores reais vs preditos
-- Figura 5: Método do cotovelo e silhouette (já no script 5)
-- Figura 6: Dispersão INSE x IDEB por cluster (já no script 5)
-- Figura 7: Características dos clusters - variáveis contínuas
-- Figura 8: Características dos clusters - variáveis binárias
+SCRIPT 6: GERAÇÃO DE FIGURAS FINAIS (REPOSITÓRIO E TCC)
+======================================================
+- Figura 1: Matriz de Correlação
+- Figura 5: Validação de Clusters (Cotovelo e Silhouette)
+- Figura: Ridge Trace Plot (Encolhimento de Betas)
+- Figura 3: Importância dos Coeficientes
+- Figuras 7/8: Perfis dos Clusters (Centroides)
 """
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import statsmodels.api as sm
-from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
-import sys
-sys.path.append('..')
-from utils.config import configurar_estilo, CORES_VIRIDIS
+from sklearn.linear_model import Ridge
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+import scipy.stats as stats
+
+# 1. CONFIGURAÇÕES DE ESTILO (PADRÃO ESALQ)
+sns.set_style("white")
+plt.rcParams['font.family'] = 'Arial'
+plt.rcParams['font.size'] = 10
+CORES_V = sns.color_palette("viridis", 3)
 
 # Carregar dados
-df_final_clean = pd.read_csv('dados/base_final.csv')
+df = pd.read_csv('dados/base_final.csv')
+x_vars = ['MEDIA_INSE', 'URBANA', 'QT_TABLET_ALUNO', 'IN_SALA_LEITURA', 
+          'QT_MAT_FUND_AF', 'IN_LABORATORIO_CIENCIAS', 'IN_EQUIP_LOUSA_DIGITAL']
 
-configurar_estilo()
+# Preparar dados padronizados para os modelos
+X = df[x_vars]
+y = df['IDEB_2023']
+X_scaled = StandardScaler().fit_transform(X)
 
 # =============================================================================
-# FIGURA 4: VALORES REAIS vs PREDITOS (OLS e RIDGE)
+# FIGURA 1: MATRIZ DE CORRELAÇÃO (PADRÃO USP)
 # =============================================================================
-print("\nGerando Figura 4...")
-
-# Preparar dados para Ridge
-x_vars = [
-    'MEDIA_INSE', 'IN_AGUA_POTAVEL', 'IN_ENERGIA_REDE_PUBLICA', 'IN_ESGOTO_REDE_PUBLICA',
-    'IN_BANDA_LARGA', 'IN_QUADRA_ESPORTES', 'IN_REFEITORIO', 'IN_SALA_LEITURA',
-    'IN_LABORATORIO_INFORMATICA', 'IN_LABORATORIO_CIENCIAS', 'IN_SALA_MULTIUSO',
-    'IN_EQUIP_LOUSA_DIGITAL', 'IN_EQUIP_MULTIMIDIA', 'QT_DESKTOP_ALUNO',
-    'QT_COMP_PORTATIL_ALUNO', 'QT_TABLET_ALUNO', 'QT_MAT_FUND_AF', 'QT_DOC_FUND_AF',
-    'URBANA'
-]
-
-X = df_final_clean[x_vars].copy()
-y = df_final_clean['IDEB_2023'].copy()
-
-# Ridge
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-ridge_model = Ridge(alpha=138.95)  # valor do seu melhor alpha
-ridge_model.fit(X_scaled, y)
-y_pred_ridge = ridge_model.predict(X_scaled)
-
-# OLS
-X_const = sm.add_constant(X)
-model_ols = sm.OLS(y, X_const).fit()
-
-# Figura
-fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-
-# OLS
-axes[0].scatter(y, model_ols.fittedvalues, alpha=0.4, s=8,
-                color=CORES_VIRIDIS[0], edgecolor='black', linewidth=0.2)
-axes[0].plot([y.min(), y.max()], [y.min(), y.max()], 'r-', linewidth=1.5)
-axes[0].set_xlabel('IDEB Real', fontsize=11)
-axes[0].set_ylabel('IDEB Predito (OLS)', fontsize=11)
-axes[0].text(0.05, 0.95, f'R² = {model_ols.rsquared:.3f}',
-             transform=axes[0].transAxes, fontsize=11, verticalalignment='top')
-
-# Ridge
-axes[1].scatter(y, y_pred_ridge, alpha=0.4, s=8,
-                color=CORES_VIRIDIS[1], edgecolor='black', linewidth=0.2)
-axes[1].plot([y.min(), y.max()], [y.min(), y.max()], 'r-', linewidth=1.5)
-axes[1].set_xlabel('IDEB Real', fontsize=11)
-axes[1].set_ylabel('IDEB Predito (Ridge)', fontsize=11)
-axes[1].text(0.05, 0.95, f'R² = {0.420:.3f}',
-             transform=axes[1].transAxes, fontsize=11, verticalalignment='top')
-
+plt.figure(figsize=(10, 8))
+corr = df[x_vars + ['IDEB_2023']].corr()
+mask = np.triu(np.ones_like(corr, dtype=bool))
+sns.heatmap(corr, mask=mask, annot=True, fmt='.2f', cmap='coolwarm', center=0,
+            square=True, linewidths=.5, cbar_kws={"shrink": .8})
+plt.xticks(rotation=45, ha='right')
 plt.tight_layout()
-plt.savefig('outputs/figuras/figura4_real_vs_predito.pdf', bbox_inches='tight', dpi=300)
-plt.savefig('outputs/figuras/figura4_real_vs_predito.png', bbox_inches='tight', dpi=300)
-plt.show()
+plt.savefig('outputs/figuras/figura1_correlacao_usp.png', dpi=300)
 
 # =============================================================================
-# FIGURA 7: CARACTERÍSTICAS DOS CLUSTERS - VARIÁVEIS CONTÍNUAS
+# FIGURA 5: VALIDAÇÃO DO NÚMERO DE CLUSTERS (SEU CÓDIGO)
 # =============================================================================
-print("Gerando Figura 7...")
+inercia, silhouettes = [], []
+K_range = range(2, 11)
+X_cluster = StandardScaler().fit_transform(df[['QT_MAT_FUND_AF', 'URBANA', 'QT_TABLET_ALUNO', 'IN_SALA_LEITURA']])
 
-variaveis_continuas = [
-    'MEDIA_INSE', 'QT_MAT_FUND_AF', 'QT_DOC_FUND_AF',
-    'QT_DESKTOP_ALUNO', 'QT_COMP_PORTATIL_ALUNO', 'QT_TABLET_ALUNO'
-]
+for k in K_range:
+    km = KMeans(n_clusters=k, random_state=42, n_init=10).fit(X_cluster)
+    inercia.append(km.inertia_)
+    silhouettes.append(silhouette_score(X_cluster, km.labels_))
 
-cluster_means_cont = df_final_clean.groupby('cluster')[variaveis_continuas].mean()
+fig, ax1 = plt.subplots(figsize=(10, 5))
+lns1 = ax1.plot(K_range, inercia, marker='o', color=CORES_V[0], label='Inércia (Cotovelo)')
+ax1.set_xlabel('Número de Clusters (k)')
+ax1.set_ylabel('Inércia')
 
-nomes_pt = {
-    'MEDIA_INSE': 'INSE',
-    'QT_MAT_FUND_AF': 'Matrículas',
-    'QT_DOC_FUND_AF': 'Docentes',
-    'QT_DESKTOP_ALUNO': 'Desktops',
-    'QT_COMP_PORTATIL_ALUNO': 'Portáteis',
-    'QT_TABLET_ALUNO': 'Tablets'
-}
-cluster_means_cont = cluster_means_cont.rename(columns=nomes_pt)
+ax2 = ax1.twinx()
+lns2 = ax2.plot(K_range, silhouettes, marker='o', color=CORES_V[1], label='Índice Silhouette')
+ax2.set_ylabel('Índice Silhouette')
 
-fig, axes = plt.subplots(2, 3, figsize=(15, 10))
-axes = axes.flatten()
-
-for i, (var, ax) in enumerate(zip(cluster_means_cont.columns, axes)):
-    values = cluster_means_cont[var].values
-    x_pos = np.arange(len(values))
-    bars = ax.bar(x_pos, values, color=CORES_VIRIDIS, edgecolor='black', linewidth=0.5)
-
-    for j, (bar, val) in enumerate(zip(bars, values)):
-        ax.text(bar.get_x() + bar.get_width()/2., bar.get_height(),
-                f'{val:.1f}', ha='center', va='bottom', fontsize=9)
-
-    ax.set_xticks(x_pos)
-    ax.set_xticklabels([f'Cluster {j}' for j in range(len(values))])
-    ax.set_ylabel('Média', fontsize=10)
-    ax.set_title(var, fontsize=11)
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-
+lns = lns1 + lns2
+labs = [l.get_label() for l in lns]
+ax1.legend(lns, labs, loc='upper right', frameon=True)
+sns.despine(top=True, right=False)
 plt.tight_layout()
-plt.savefig('outputs/figuras/figura7_clusters_continuas.pdf', bbox_inches='tight', dpi=300)
-plt.savefig('outputs/figuras/figura7_clusters_continuas.png', bbox_inches='tight', dpi=300)
-plt.show()
+plt.savefig('outputs/figuras/figura5_validacao_k.svg')
 
 # =============================================================================
-# FIGURA 8: CARACTERÍSTICAS DOS CLUSTERS - VARIÁVEIS BINÁRIAS
+# RIDGE TRACE PLOT (SUGESTÃO ADICIONAL)
 # =============================================================================
-print("Gerando Figura 8...")
+alphas = np.logspace(-2, 6, 100)
+coefs = []
+for a in alphas:
+    ridge = Ridge(alpha=a).fit(X_scaled, y)
+    coefs.append(ridge.coef_)
 
-variaveis_binarias = [
-    'IN_AGUA_POTAVEL', 'IN_ENERGIA_REDE_PUBLICA', 'IN_ESGOTO_REDE_PUBLICA',
-    'IN_BANDA_LARGA', 'IN_QUADRA_ESPORTES', 'IN_REFEITORIO',
-    'IN_SALA_LEITURA', 'IN_LABORATORIO_INFORMATICA', 'IN_LABORATORIO_CIENCIAS',
-    'IN_SALA_MULTIUSO', 'IN_EQUIP_LOUSA_DIGITAL', 'IN_EQUIP_MULTIMIDIA',
-    'URBANA'
-]
+plt.figure(figsize=(10, 6))
+ax = plt.gca()
+ax.plot(alphas, coefs)
+ax.set_xscale('log')
+plt.xlabel('Alpha (λ) - Escala Log')
+plt.ylabel('Coeficientes (β)')
+plt.title('Ridge Trace: Encolhimento dos Coeficientes')
+sns.despine()
+plt.savefig('outputs/figuras/ridge_trace_plot.png', dpi=300)
 
-cluster_means_bin = df_final_clean.groupby('cluster')[variaveis_binarias].mean() * 100
+# =============================================================================
+# FIGURA 3: IMPORTÂNCIA DAS VARIÁVEIS
+# =============================================================================
+# Treinar modelos para comparação (usando dados padronizados)
+from sklearn.linear_model import LinearRegression
+ols = LinearRegression().fit(X_scaled, y)
+ridge = Ridge(alpha=100).fit(X_scaled, y) # Exemplo de alpha
 
-nomes_pt_bin = {
-    'IN_AGUA_POTAVEL': 'Água',
-    'IN_ENERGIA_REDE_PUBLICA': 'Energia',
-    'IN_ESGOTO_REDE_PUBLICA': 'Esgoto',
-    'IN_BANDA_LARGA': 'Banda Larga',
-    'IN_QUADRA_ESPORTES': 'Quadra',
-    'IN_REFEITORIO': 'Refeitório',
-    'IN_SALA_LEITURA': 'Sala Leitura',
-    'IN_LABORATORIO_INFORMATICA': 'Lab. Info',
-    'IN_LABORATORIO_CIENCIAS': 'Lab. Ciências',
-    'IN_SALA_MULTIUSO': 'Sala Multiuso',
-    'IN_EQUIP_LOUSA_DIGITAL': 'Lousa Digital',
-    'IN_EQUIP_MULTIMIDIA': 'Multimídia',
-    'URBANA': 'Urbana'
-}
-cluster_means_bin = cluster_means_bin.rename(columns=nomes_pt_bin)
+importancia = pd.DataFrame({
+    'Variável': x_vars,
+    'OLS': ols.coef_,
+    'Ridge': ridge.coef_
+}).sort_values(by='Ridge', ascending=True)
 
-fig, ax = plt.subplots(figsize=(14, 8))
-x = np.arange(len(cluster_means_bin.columns))
-width = 0.25
-
-for i in range(3):
-    offset = (i - 1) * width
-    values = cluster_means_bin.iloc[i].values
-    bars = ax.bar(x + offset, values, width, label=f'Cluster {i}',
-                  color=['#FF0000', '#0000FF', '#FFFF00'][i],
-                  edgecolor='black', linewidth=0.5)
-
-    for j, (bar, val) in enumerate(zip(bars, values)):
-        if val > 5:
-            ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 1,
-                   f'{val:.0f}%', ha='center', va='bottom', fontsize=7)
-
-ax.set_xlabel('Variáveis de Infraestrutura', fontsize=12)
-ax.set_ylabel('Proporção (%)', fontsize=12)
-ax.set_xticks(x)
-ax.set_xticklabels(cluster_means_bin.columns, rotation=45, ha='right', fontsize=9)
-ax.set_ylim(0, 105)
-ax.legend(frameon=False, fontsize=10)
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-
+plt.figure(figsize=(10, 8))
+y_pos = np.arange(len(importancia))
+plt.barh(y_pos - 0.2, importancia['OLS'], 0.4, label='OLS', color=CORES_V[0], alpha=0.7)
+plt.barh(y_pos + 0.2, importancia['Ridge'], 0.4, label='Ridge', color=CORES_V[1], alpha=0.7)
+plt.yticks(y_pos, importancia['Variável'])
+plt.xlabel('Coeficiente Padronizado (Beta)')
+plt.legend(frameon=False)
+sns.despine()
 plt.tight_layout()
-plt.savefig('outputs/figuras/figura8_clusters_binarias.pdf', bbox_inches='tight', dpi=300)
-plt.savefig('outputs/figuras/figura8_clusters_binarias.png', bbox_inches='tight', dpi=300)
-plt.show()
+plt.savefig('outputs/figuras/figura3_importancia_juliano.png', dpi=300)
 
-print("\n✅ Todas as figuras foram geradas e salvas em outputs/figuras/")dd
+plt.show()

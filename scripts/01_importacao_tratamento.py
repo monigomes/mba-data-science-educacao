@@ -21,6 +21,9 @@ if 'COLAB_GPU' in os.environ:
 # CONFIGURAÇÃO DOS CAMINHOS
 # =============================================================================
 # ATENÇÃO: Ajuste os caminhos conforme sua estrutura de pastas
+# DATASETS DISPONÍVEIS EM: https://www.gov.br/inep/pt-br/areas-de-atuacao/pesquisas-estatisticas-e-indicadores/ideb/resultados (IDEB 2023)
+                        # https://www.gov.br/inep/pt-br/areas-de-atuacao/pesquisas-estatisticas-e-indicadores/censo-escolar/resultados (CENSO ESCOLAR 2023)
+                        # https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/indicadores-educacionais/nivel-socioeconomico (INSE 2023)
 BASE_PATH = '/content/drive/MyDrive/TCC - MBA USP/'
 
 CAMINHO_IDEB = BASE_PATH + 'divulgacao_anos_finais_escolas_2023/divulgacao_anos_finais_escolas_2023.xlsx'
@@ -137,4 +140,4 @@ df_final_clean['URBANA'] = (df_final_clean['TP_LOCALIZACAO'] == 1).astype(int)
 # 7. SALVAR BASE FINAL
 # =============================================================================
 df_final_clean.to_csv('dados/base_final.csv', index=False, encoding='utf-8')
-print("\n✅ Base salva em: dados/base_final.csv")
+print("\n Base salva em: dados/base_final.csv")
