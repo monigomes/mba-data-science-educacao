@@ -25,13 +25,13 @@ Este repositório contém todos os códigos Python utilizados na análise do Tra
   - `03_modelo_ols_diagnosticos.py` - Regressão OLS e testes
   - `04_regressao_ridge.py` - Regressão Ridge
   - `05_analise_clusters.py` - Análise de clusters (K-means)
-  - `06_figuras.py` - Geração de todas as figuras
+  - `06_analise_interacoes_moderacao.py` - Análise de Interação e Moderação "Gaiolas Digitais"
 - `utils/`
   - `config.py` - Configurações de estilo
 - `dados/` - Instruções para acesso aos dados
 - `outputs/`
   - `figuras/` - Figuras geradas
-  - `tabelas/` - Tabelas exportadas
+  - `tabelas/` - Tabelas exportadas/printadas
 - `requirements.txt` - Dependências do projeto
 
 ### Como Executar

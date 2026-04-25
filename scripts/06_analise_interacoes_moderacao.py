@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-SCRIPT 7: ANÁLISE DE INTERAÇÃO E MODERAÇÃO (GAIOLA DIGITAL)
+SCRIPT 6: ANÁLISE DE INTERAÇÃO E MODERAÇÃO (GAIOLA DIGITAL)
 ==========================================================
 - Testa se a Infraestrutura Pedagógica (Sala de Leitura) modera 
   o efeito dos Tablets no desempenho escolar.
@@ -64,7 +64,7 @@ else:
     print("\nCONCLUSÃO: O termo de interação é significativo.")
 
 # =============================================================================
-# 4. VISUALIZAÇÃO DO EFEITO (OPCIONAL)
+# 4. VISUALIZAÇÃO DO EFEITO
 # =============================================================================
 plt.figure(figsize=(10, 6))
 sns.regplot(x='QT_TABLET_ALUNO', y='IDEB_2023', data=df[df['IN_SALA_LEITURA'] == 1], 
