@@ -52,36 +52,139 @@ for var in vars_analise:
     print(f"{var}: Assimetria={skewness:.4f}, Curtose={kurtosis:.4f}")
 
 # =============================================================================
+# 2. MATRIZ DE CORRELAÇÃO RESUMIDA
+# =============================================================================
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+print("\n" + "=" * 80)
+print("MATRIZ DE CORRELAÇÃO DE PEARSON - VARIÁVEIS SELECIONADAS")
+print("=" * 80)
+
+# -----------------------------------------------------------------------------
+# 1. SELEÇÃO DAS VARIÁVEIS ESSENCIAIS
+# -----------------------------------------------------------------------------
+variaveis_essenciais = [
+    'IDEB_2023',
+    'MEDIA_INSE',
+    'QT_MAT_FUND_AF',
+    'QT_DOC_FUND_AF',
+    'TP_LOCALIZACAO',
+    'IN_EQUIP_LOUSA_DIGITAL',
+    'QT_TABLET_ALUNO',
+    'IN_LABORATORIO_INFORMATICA',
+    'IN_SALA_LEITURA',
+    'IN_SALA_MULTIUSO',
+    'IN_LABORATORIO_CIENCIAS'
+]
+
+df_subset = df_final_clean[variaveis_essenciais].dropna().copy()
+
+# -----------------------------------------------------------------------------
 # 2. MATRIZ DE CORRELAÇÃO
-# =============================================================================
-print("\n" + "="*80)
-print("MATRIZ DE CORRELAÇÃO DE PEARSON")
-print("="*80)
+# -----------------------------------------------------------------------------
+corr_matrix_essencial = df_subset.corr()
 
-df_analise = df_final_clean[vars_analise].copy()
-corr_matrix = df_analise.corr()
-print("\n", corr_matrix.round(4))
+# -----------------------------------------------------------------------------
+# 3. HEATMAP (COM VALORES)
+# -----------------------------------------------------------------------------
+sns.set_style("white")
+sns.set_context("paper", font_scale=1.2)
 
-# Correlações com a variável dependente
-print("\n" + "-"*50)
-print(f"CORRELAÇÕES COM {y_variable}")
-print("-"*50)
-corr_with_y = corr_matrix[y_variable].drop(y_variable).sort_values(ascending=False)
-for var, corr in corr_with_y.items():
-    print(f"{var}: {corr:.4f}")
+plt.figure(figsize=(10, 8))
 
-# =============================================================================
-# 3. HEATMAP DA CORRELAÇÃO
-# =============================================================================
-configurar_estilo()
+mask = np.triu(np.ones_like(corr_matrix_essencial, dtype=bool))
 
-plt.figure(figsize=(12, 10))
-mask = np.triu(np.ones_like(corr_matrix, dtype=bool))
-sns.heatmap(corr_matrix, mask=mask, annot=True, fmt='.3f',
-            cmap='RdBu_r', center=0, square=True,
-            linewidths=0.5, cbar_kws={"shrink": 0.8})
-plt.title('Matriz de Correlação - Variáveis do Estudo', fontsize=16, fontweight='bold')
+sns.heatmap(
+    corr_matrix_essencial,
+    mask=mask,
+    annot=True,
+    fmt='.3f',
+    cmap='coolwarm',
+    center=0,
+    square=True,
+    linewidths=0,
+    cbar_kws={
+        "shrink": 0.8,
+        "label": "Coeficiente de Correlação de Pearson",
+        "ticks": [-1.0, -0.5, 0, 0.5, 1.0]
+    },
+    annot_kws={"size": 8}
+)
+
+plt.xticks(rotation=45, ha='right')
+plt.yticks(rotation=0)
 plt.tight_layout()
-plt.savefig('outputs/figuras/matriz_correlacao.png', dpi=300, bbox_inches='tight')
-plt.savefig('outputs/figuras/matriz_correlacao.pdf', bbox_inches='tight')
+
+# -----------------------------------------------------------------------------
+# 4. SALVAR (SEM DUPLICAÇÃO)
+# -----------------------------------------------------------------------------
+plt.savefig('matriz_correlacao_essencial.png', dpi=300, bbox_inches='tight')
+plt.savefig('matriz_correlacao_essencial.pdf', format='pdf', bbox_inches='tight')
+plt.savefig('matriz_correlacao_essencial.svg', format='svg', bbox_inches='tight')
+
+plt.show()
+
+# -----------------------------------------------------------------------------
+# 5. CORRELAÇÕES DIRETAS COM IDEB
+# -----------------------------------------------------------------------------
+print("\n" + "-" * 50)
+print("CORRELAÇÕES COM IDEB_2023")
+print("-" * 50)
+
+print(
+    corr_matrix_essencial['IDEB_2023']
+    .sort_values(ascending=False)
+    .round(4)
+)
+
+# =============================================================================
+# 3. MATRIZ DE CORRELAÇÃO COMPLETA (SEM RÓTULOS)
+# =============================================================================
+
+sns.set_style("white")
+sns.set_context("paper", font_scale=1.2)
+
+# -----------------------------------------------------------------------------
+# MATRIZ COMPLETA (OU PODE USAR A RESUMIDA)
+# -----------------------------------------------------------------------------
+corr_matrix = df_final_clean[variaveis_essenciais].dropna().corr()
+
+plt.figure(figsize=(10, 8))
+
+mask = np.triu(np.ones_like(corr_matrix, dtype=bool), k=1)
+
+ax = sns.heatmap(
+    corr_matrix,
+    mask=mask,
+    annot=False,
+    cmap='RdBu_r',
+    center=0,
+    square=True,
+    linewidths=0.5,
+    cbar_kws={
+        "shrink": 0.8,
+        "label": "Coeficiente de Correlação de Pearson ($r$)",
+        "ticks": [-1.0, -0.5, 0, 0.5, 1.0]
+    }
+)
+
+# Remover bordas externas
+for spine in ax.spines.values():
+    spine.set_visible(False)
+
+plt.xticks(rotation=45, ha='right', fontsize=9)
+plt.yticks(fontsize=9)
+
+plt.tight_layout()
+
+# -----------------------------------------------------------------------------
+# SALVAR
+# -----------------------------------------------------------------------------
+plt.savefig('matriz_correlacao_clean.png', dpi=300, bbox_inches='tight')
+plt.savefig('matriz_correlacao_clean.pdf', format='pdf', bbox_inches='tight')
+plt.savefig('matriz_correlacao_clean.svg', format='svg', bbox_inches='tight')
+
 plt.show()
