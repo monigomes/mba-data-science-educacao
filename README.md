@@ -1,4 +1,4 @@
-# MBA em Data Science & Analytics - Educação (USP/ESALQ)
+# MBA em Data Science e Analytics -  USP/ESALQ
 
 ## Determinantes do desempenho escolar: integração de regressão e agrupamentos em escolas públicas paulistas
 
