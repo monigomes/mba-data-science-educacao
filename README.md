@@ -159,6 +159,6 @@ Caso utilize este repositório, cite conforme indicado no arquivo `CITATION.cff`
 
 Referência sugerida:
 
-> SILVA, Monica Gomes de Souza; LIMA, Fábio. *Determinantes do desempenho escolar: integração de regressão e agrupamentos em escolas públicas paulistas*. Trabalho de Conclusão de Curso apresentado ao MBA em Data Science & Analytics, USP/ESALQ, 2026.
+> SILVA, Monica Gomes de Souza; LIMA, Fábio. *Determinantes do desempenho escolar: integração de regressão e agrupamentos em escolas públicas paulistas*. Trabalho de Conclusão de Curso apresentado ao MBA em Data Science e Analytics, USP/ESALQ, 2026.
 
 ---
