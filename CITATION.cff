@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "Se você usar este repositório, cite conforme abaixo."
+title: "Análise IDEB, Censo Escolar e INSE — TCC MBA"
+authors:
+  - family-names: "[SOBRENOME]"
+    given-names: "[NOME]"
+date-released: "2026-06-20"
+version: "1.0.0"
+license: "MIT"
+repository-code: "https://github.com/[usuario]/[repositorio]"
