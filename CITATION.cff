@@ -1,10 +1,21 @@
 cff-version: 1.2.0
 message: "Se você usar este repositório, cite conforme abaixo."
-title: "Análise IDEB, Censo Escolar e INSE — TCC MBA"
+title: "Determinantes do desempenho escolar: integração de regressão e agrupamentos em escolas públicas paulistas"
 authors:
-  - family-names: "[SOBRENOME]"
-    given-names: "[NOME]"
+  - family-names: "Silva"
+    given-names: "Monica Gomes de Souza"
+  - family-names: "Lima"
+    given-names: "Fábio"
 date-released: "2026-06-20"
 version: "1.0.0"
 license: "MIT"
-repository-code: "https://github.com/[usuario]/[repositorio]"
+repository-code: "https://github.com/monigomes/mba-data-science-educacao"
+keywords:
+  - IDEB
+  - INSE
+  - Censo Escolar
+  - infraestrutura escolar
+  - regressão Ridge
+  - análise de agrupamentos
+  - K-means
+abstract: "Repositório com códigos, bases organizadas e figuras utilizados no Trabalho de Conclusão de Curso em Data Science e Analytics, voltado à análise dos determinantes do desempenho escolar em escolas públicas paulistas a partir da integração de dados do IDEB, Censo Escolar e INSE."
