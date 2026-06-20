@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Determinantes do desempenho escolar: 
+
+# ===========================================================================
+""" 11. Determinantes do desempenho escolar: 
 integração de regressão e agrupamentos em escolas 
-públicas paulistas - MBA Data Science e Analytics - TCC
-
-
-
+públicas paulistas - MBA Data Science e Analytics - TCC"""
+# =============================================================================
+"""
 ## SETUP E REPRODUTIBILIDADE
 """
 
@@ -1483,5 +1484,5 @@ if __name__ == "__main__":
                             lab_gower=_lab_gower, lab_kp=_lab_kp,
                             path="figuras/16_concordancia_matriz.png")
 
-    # NOVA — matriz de correlação (valores exatos do df.corr())
     fig_matriz_correlacao(df, path="figuras/17_matriz_correlacao.png")
+
